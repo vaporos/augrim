@@ -34,4 +34,31 @@ experimental = [
     # The experimental feature extends stable:
     "stable",
     # The following features are experimental:
+    "algorithm",
+    "algorithm-flooding",
+    "broadcast",
+    "broadcast-best-effort",
+    "communication",
+    "communication-internal",
+    "links",
+    "links-fair-loss",
+    "links-perfect",
+    "links-stubborn",
+    "message",
+    "network",
+    "process",
 ]
+
+algorithm = []
+algorithm-flooding = ["algorithm", "broadcast-best-effort"]
+broadcast = []
+broadcast-best-effort = ["broadcast", "network"]
+communication = []
+communication-internal = ["communication", "links-fair-loss"]
+links = []
+links-fair-loss = ["links", "message", "process"]
+links-perfect = ["links"]
+links-stubborn = ["links", "links-fair-loss", "message", "process"]
+message = []
+network = ["message", "process"]
+process = []
