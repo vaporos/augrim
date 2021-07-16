@@ -13,65 +13,102 @@
 // limitations under the License.
 
 use crate::error::InternalError;
-use crate::process::Process;
 use crate::message::Message;
+use crate::process::Process;
 
-use super::{FairLossSender, FairLossReceiver};
+use super::{FairLossLink, Receiver, Sender};
 
-pub trait StubbornSender<P, M>
-where
-    P: Process,
-    M: Message,
-{
-    fn send(to_process: &P, message: M) -> Result<(), InternalError>;
-}
+pub trait StubbornLink {}
 
-pub trait StubbornReceiver<P, M>
-where
-    P: Process,
-    M: Message,
-{
-    fn recv(from_process: &P, message: M) -> Result<(), InternalError>;
-}
+impl<T> FairLossLink for T where T: StubbornLink {}
 
 // p36
-struct DefaultStubbornSender<P, M, S>
+pub struct StubbornSender<P, M, S>
 where
     P: Process,
     M: Message,
-    S: FairLossSender<P, M>,
+    S: Sender<P, M> + FairLossLink,
 {
-    fair_loss_sender: S,
+    inner: S,
     process_phantom: std::marker::PhantomData<P>,
     message_phantom: std::marker::PhantomData<M>,
 }
 
-impl<P, M, S> DefaultStubbornSender<P, M, S>
+impl<P, M, S> StubbornSender<P, M, S>
 where
     P: Process,
     M: Message,
-    S: FairLossSender<P, M>,
+    S: Sender<P, M> + FairLossLink,
 {
-    fn new(fair_loss_sender: S) -> Self {
-        DefaultStubbornSender {
-            fair_loss_sender,
+    fn new(sender: S) -> Self {
+        StubbornSender {
+            inner: sender,
             process_phantom: std::marker::PhantomData,
             message_phantom: std::marker::PhantomData,
         }
     }
 }
 
-impl<P, M, S> StubbornSender<P, M> for DefaultStubbornSender<P, M, S>
+impl<P, M, S> Sender<P, M> for StubbornSender<P, M, S>
 where
     P: Process,
     M: Message,
-    S: FairLossSender<P, M>,
+    S: Sender<P, M> + FairLossLink,
 {
     fn send(to_process: &P, message: M) -> Result<(), InternalError> {
         unimplemented!()
     }
 }
 
-//impl<P, M> FairLossReceiver for StubbornReceiver<P, M> {
-//
-//}
+impl<P, M, S> StubbornLink for StubbornSender<P, M, S>
+where
+    P: Process,
+    M: Message,
+    S: Sender<P, M> + FairLossLink,
+{
+}
+
+pub struct StubbornReceiver<P, M, R>
+where
+    P: Process,
+    M: Message,
+    R: Receiver<P, M> + FairLossLink,
+{
+    inner: R,
+    process_phantom: std::marker::PhantomData<P>,
+    message_phantom: std::marker::PhantomData<M>,
+}
+
+impl<P, M, R> StubbornReceiver<P, M, R>
+where
+    P: Process,
+    M: Message,
+    R: Receiver<P, M> + FairLossLink,
+{
+    fn new(receiver: R) -> Self {
+        StubbornReceiver {
+            inner: receiver,
+            process_phantom: std::marker::PhantomData,
+            message_phantom: std::marker::PhantomData,
+        }
+    }
+}
+
+impl<P, M, R> Receiver<P, M> for StubbornReceiver<P, M, R>
+where
+    P: Process,
+    M: Message,
+    R: Receiver<P, M> + FairLossLink,
+{
+    fn recv(from_process: &P, message: M) -> Result<(), InternalError> {
+        unimplemented!()
+    }
+}
+
+impl<P, M, R> StubbornLink for StubbornReceiver<P, M, R>
+where
+    P: Process,
+    M: Message,
+    R: Receiver<P, M> + FairLossLink,
+{
+}

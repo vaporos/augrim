@@ -13,30 +13,14 @@
 // limitations under the License.
 
 //! This module contains traits for fair-loss links.
-//!
-//! A fair-loss link[^note] is a connection between a sender and a receipient which provides
-//! minimal delivery guarentees. Messages may be dropped by the link, but if a message is
-//! retransmitted it will eventually be delivered.
-//!
-//! [^note]: For a full explanation of fair-loss links, see Cachin, Guerraoui, and Rodrigues,
-//! Reliable and Secure Distributed Programming, 2nd ed., 2.4.2.
 
-use crate::error::InternalError;
-use crate::message::Message;
-use crate::process::Process;
 
-pub trait FairLossSender<P, M>
-where
-    P: Process,
-    M: Message,
-{
-    fn send(to_process: &P, message: M) -> Result<(), InternalError>;
-}
-
-pub trait FairLossReceiver<P, M>
-where
-    P: Process,
-    M: Message,
-{
-    fn deliver(from_process: &P, message: M) -> Result<(), InternalError>;
-}
+/// Marker trait for indicating a fair-loss link requirement.
+///
+/// A fair-loss link[^note] is a connection between a sender and a receipient which provides
+/// minimal delivery guarentees. Messages may be dropped by the link, but if a message is
+/// retransmitted it will eventually be delivered.
+///
+/// [^note]: For a full explanation of fair-loss links, see Cachin, Guerraoui, and Rodrigues,
+/// Reliable and Secure Distributed Programming, 2nd ed., 2.4.2.
+pub trait FairLossLink {}

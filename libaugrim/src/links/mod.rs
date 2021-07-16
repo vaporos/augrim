@@ -14,10 +14,32 @@
 
 #[cfg(feature = "links-fair-loss")]
 mod fair_loss;
-#[cfg(feature = "links-stubborn")]
-mod stubborn;
 #[cfg(feature = "links-perfect")]
 mod perfect;
+#[cfg(feature = "links-stubborn")]
+mod stubborn;
+
+use crate::error::InternalError;
+use crate::message::Message;
+use crate::process::Process;
 
 #[cfg(feature = "links-fair-loss")]
-pub use fair_loss::{FairLossSender, FairLossReceiver};
+pub use fair_loss::FairLossLink;
+#[cfg(feature = "links-stubborn")]
+pub use stubborn::{StubbornLink, StubbornReceiver, StubbornSender};
+
+pub trait Sender<P, M>
+where
+    P: Process,
+    M: Message,
+{
+    fn send(to_process: &P, message: M) -> Result<(), InternalError>;
+}
+
+pub trait Receiver<P, M>
+where
+    P: Process,
+    M: Message,
+{
+    fn recv(from_process: &P, message: M) -> Result<(), InternalError>;
+}
