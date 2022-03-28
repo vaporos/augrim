@@ -35,8 +35,10 @@ experimental = [
     "stable",
     # The following features are experimental:
     "algorithm",
+    "algorithm-flooding",
     "links",
 ]
 
 algorithm = []
+algorithm-flooding = ["algorithm"]
 links = []
