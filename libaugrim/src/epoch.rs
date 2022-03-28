@@ -1,4 +1,4 @@
-// Copyright 2021 Cargill Incorporated
+// Copyright 2021-2022 Cargill Incorporated
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,4 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#[macro_use]
-extern crate log;
-
-#[cfg(feature = "algorithm")]
-pub mod algorithm;
-pub mod epoch;
-pub mod error;
-#[cfg(feature = "links")]
-pub mod links;
-pub mod message;
-pub mod process;
+pub trait Epoch: Copy + Eq + PartialEq + Default {}
