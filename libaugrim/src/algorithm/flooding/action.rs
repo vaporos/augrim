@@ -1,4 +1,4 @@
-// Copyright 2021-2022 Cargill Incorporated
+// Copyright 2021 Cargill Incorporated
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,16 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-mod action;
-mod algorithm;
-mod context;
-mod event;
-mod message;
+use crate::algorithm::{Action, Value};
+use crate::process::Process;
 
-pub use action::FloodingAction;
-pub use algorithm::FloodingAlgorithm;
-pub use context::FloodingContext;
-pub use event::FloodingEvent;
-pub use message::FloodingMessage;
+use super::context::FloodingContext;
+use super::message::FloodingMessage;
 
-pub type Round = usize;
+pub enum FloodingAction<P, V>
+where
+    P: Process,
+    V: Value,
+{
+    Broadcast(FloodingMessage<V>),
+    Decide(V),
+    UpdateContext(FloodingContext<P, V>),
+}
+
+impl<P, V> Action for FloodingAction<P, V>
+where
+    P: Process,
+    V: Value,
+{
+}
