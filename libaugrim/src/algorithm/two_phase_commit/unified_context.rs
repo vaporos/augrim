@@ -12,40 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+use crate::algorithm::two_phase_commit::Epoch;
 use crate::process::Process;
 use crate::time::Time;
 
-use super::Epoch;
+use super::CoordinatorState;
+use super::Participant;
+use super::ParticipantState;
 
 #[derive(Clone)]
-pub struct Participant<P> {
-    pub process: P,
-    pub vote: Option<bool>,
-}
-
-impl<P> Participant<P> {
-    pub fn new(process: P) -> Participant<P> {
-        Participant {
-            process,
-            vote: None,
-        }
-    }
-}
-
-#[derive(Clone)]
-pub enum CoordinatorState<T>
+pub enum TwoPhaseCommitRoleContext<P, T>
 where
+    P: Process,
     T: Time,
 {
-    Abort,
-    Commit,
-    Voting { vote_timeout_start: T },
-    WaitingForStart,
-    WaitingForVote,
+    Coordinator {
+        participants: Vec<Participant<P>>,
+        state: CoordinatorState<T>,
+    },
+    Participant {
+        participant_processes: Vec<P>,
+        state: ParticipantState<T>,
+    },
 }
 
 #[derive(Clone)]
-pub struct CoordinatorContext<P, T>
+pub struct TwoPhaseCommitContext<P, T>
 where
     P: Process,
     T: Time,
@@ -54,26 +46,43 @@ where
     coordinator: P,
     epoch: Epoch,
     last_commit_epoch: Option<Epoch>,
-    participants: Vec<Participant<P>>,
-    state: CoordinatorState<T>,
+    role_context: TwoPhaseCommitRoleContext<P, T>,
+    this_process: P,
 }
 
-impl<P, T> CoordinatorContext<P, T>
+impl<P, T> TwoPhaseCommitContext<P, T>
 where
     P: Process,
     T: Time,
 {
-    pub fn new(coordinator: P, participant_processes: Vec<P>) -> Self {
-        CoordinatorContext {
+    pub fn new_coordinator(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+        Self {
             alarm: None,
             coordinator,
-            participants: participant_processes
-                .into_iter()
-                .map(Participant::new)
-                .collect(),
-            state: CoordinatorState::WaitingForStart,
             epoch: 0,
             last_commit_epoch: None,
+            role_context: TwoPhaseCommitRoleContext::Coordinator {
+                participants: participant_processes
+                    .into_iter()
+                    .map(Participant::new)
+                    .collect(),
+                state: CoordinatorState::WaitingForStart,
+            },
+            this_process,
+        }
+    }
+
+    pub fn new_participant(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+        Self {
+            alarm: None,
+            coordinator,
+            epoch: 0,
+            last_commit_epoch: None,
+            role_context: TwoPhaseCommitRoleContext::Participant {
+                participant_processes,
+                state: ParticipantState::WaitingForVoteRequest,
+            },
+            this_process,
         }
     }
 
@@ -105,19 +114,11 @@ where
         self.last_commit_epoch = epoch
     }
 
-    pub fn participants(&self) -> &Vec<Participant<P>> {
-        &self.participants
+    pub fn role_context(&self) -> &TwoPhaseCommitRoleContext<P, T> {
+        &self.role_context
     }
 
-    pub fn participants_mut(&mut self) -> &mut Vec<Participant<P>> {
-        &mut self.participants
-    }
-
-    pub fn state(&self) -> &CoordinatorState<T> {
-        &self.state
-    }
-
-    pub fn set_state(&mut self, state: CoordinatorState<T>) {
-        self.state = state;
+    pub fn this_process(&self) -> &P {
+        &self.this_process
     }
 }
