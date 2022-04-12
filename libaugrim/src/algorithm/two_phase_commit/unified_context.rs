@@ -317,7 +317,8 @@ where
     P: Process,
     T: Time,
 {
-    pub(super) fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+    // FIXME - remove or make pub(super)
+    pub fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
         Self {
             alarm: None,
             coordinator,
@@ -356,7 +357,8 @@ where
     P: Process,
     T: Time,
 {
-    pub(super) fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+    // FIXME - remove or make pub(super)
+    pub fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
         Self {
             alarm: None,
             coordinator,
