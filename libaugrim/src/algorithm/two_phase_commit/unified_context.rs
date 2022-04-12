@@ -317,7 +317,7 @@ where
     P: Process,
     T: Time,
 {
-    pub fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+    pub(super) fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
         Self {
             alarm: None,
             coordinator,
@@ -334,19 +334,19 @@ where
         }
     }
 
-    pub fn participants(&self) -> &Vec<Participant<P>> {
+    pub(super) fn participants(&self) -> &Vec<Participant<P>> {
         &self.role_context.participants
     }
 
-    pub fn participants_mut(&mut self) -> &mut Vec<Participant<P>> {
+    pub(super) fn participants_mut(&mut self) -> &mut Vec<Participant<P>> {
         &mut self.role_context.participants
     }
 
-    pub fn state(&self) -> &CoordinatorState<T> {
+    pub(super) fn state(&self) -> &CoordinatorState<T> {
         &self.role_context.state
     }
 
-    pub fn set_state(&mut self, state: CoordinatorState<T>) {
+    pub(super) fn set_state(&mut self, state: CoordinatorState<T>) {
         self.role_context.state = state;
     }
 }
@@ -356,7 +356,7 @@ where
     P: Process,
     T: Time,
 {
-    pub fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
+    pub(super) fn new(this_process: P, coordinator: P, participant_processes: Vec<P>) -> Self {
         Self {
             alarm: None,
             coordinator,
@@ -370,19 +370,20 @@ where
         }
     }
 
-    pub fn participant_processes(&self) -> &Vec<P> {
+    pub(super) fn participant_processes(&self) -> &Vec<P> {
         &self.role_context.participant_processes
     }
 
-    pub fn state(&self) -> &ParticipantState<T> {
+    pub(super) fn state(&self) -> &ParticipantState<T> {
         &self.role_context.state
     }
 
-    pub fn set_state(&mut self, state: ParticipantState<T>) {
+    pub(super) fn set_state(&mut self, state: ParticipantState<T>) {
         self.role_context.state = state;
     }
 }
 
+#[doc(hidden)]
 impl<P, T> TryFrom<TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>>
     for TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>
 where
@@ -405,6 +406,7 @@ where
     }
 }
 
+#[doc(hidden)]
 impl<P, T> TryFrom<TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>>
     for TwoPhaseCommitContext<P, T, ParticipantContext<P, T>>
 where
@@ -427,6 +429,7 @@ where
     }
 }
 
+#[doc(hidden)]
 impl<P, T> From<TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>>
     for TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>
 where
@@ -445,6 +448,7 @@ where
     }
 }
 
+#[doc(hidden)]
 impl<P, T> From<TwoPhaseCommitContext<P, T, ParticipantContext<P, T>>>
     for TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>
 where
