@@ -23,6 +23,7 @@ mod participant_context;
 mod participant_event;
 mod participant_message;
 mod unified_action;
+mod unified_algorithm;
 mod unified_context;
 mod unified_event;
 mod unified_message;
@@ -39,6 +40,7 @@ use participant_context::{ParticipantContext, ParticipantState};
 pub use participant_event::ParticipantEvent;
 pub use participant_message::ParticipantMessage;
 pub use unified_action::{TwoPhaseCommitAction, TwoPhaseCommitActionNotification};
+pub use unified_algorithm::TwoPhaseCommitAlgorithm;
 pub use unified_context::{
     TwoPhaseCommitContext, TwoPhaseCommitContextBuilder, TwoPhaseCommitRoleContext,
 };

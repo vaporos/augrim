@@ -20,7 +20,7 @@ use std::time::SystemTime;
 
 pub trait Time: Add<Duration, Output = Self> + PartialOrd + Copy + Debug {}
 
-pub trait TimeSource {
+pub trait TimeSource: Clone {
     type Time: Time;
 
     fn now(&self) -> Self::Time;
@@ -28,7 +28,7 @@ pub trait TimeSource {
 
 impl Time for SystemTime {}
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct SystemTimeFactory {}
 
 impl SystemTimeFactory {

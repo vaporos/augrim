@@ -41,7 +41,10 @@ where
 {
 }
 
-pub enum TwoPhaseCommitActionNotification<V> {
+pub enum TwoPhaseCommitActionNotification<V>
+where
+    V: Value,
+{
     Abort(),
     Commit(),
     MessageDropped(String),
