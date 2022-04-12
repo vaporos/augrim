@@ -232,7 +232,7 @@ where
 }
 
 #[derive(Clone)]
-pub struct TwoPhaseCommitContext<P, T, R>
+pub struct TwoPhaseCommitContext<P, T, R = TwoPhaseCommitRoleContext<P, T>>
 where
     P: Process,
     T: Time,
@@ -503,8 +503,7 @@ mod tests {
         );
         assert_eq!(coordinator_context.participants().len(), 3);
 
-        let reunified_context: TwoPhaseCommitContext<_, _, TwoPhaseCommitRoleContext<_, _>> =
-            coordinator_context.into();
+        let reunified_context: TwoPhaseCommitContext<_, _> = coordinator_context.into();
 
         assert_eq!(reunified_context.alarm().unwrap(), now);
         assert_eq!(*reunified_context.coordinator(), "me".to_string());
