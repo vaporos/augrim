@@ -15,7 +15,7 @@
 use crate::process::Process;
 use crate::time::Time;
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum ParticipantState<T>
 where
     T: Time,

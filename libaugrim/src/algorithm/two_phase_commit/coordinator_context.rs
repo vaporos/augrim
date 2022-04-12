@@ -30,7 +30,7 @@ impl<P> Participant<P> {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, PartialEq)]
 pub enum CoordinatorState<T>
 where
     T: Time,

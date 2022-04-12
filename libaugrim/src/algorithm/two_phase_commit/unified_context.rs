@@ -285,6 +285,33 @@ where
     }
 }
 
+impl<P, T> TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>
+where
+    P: Process,
+    T: Time,
+{
+    pub fn participants(&self) -> Option<&Vec<Participant<P>>> {
+        match &self.role_context.inner {
+            InnerContext::Coordinator(c) => Some(&c.participants),
+            InnerContext::Participant(_) => None,
+        }
+    }
+
+    pub fn participant_processes(&self) -> Option<&Vec<P>> {
+        match &self.role_context.inner {
+            InnerContext::Coordinator(_) => None,
+            InnerContext::Participant(c) => Some(&c.participant_processes),
+        }
+    }
+
+    pub fn state(&self) -> TwoPhaseCommitState<T> {
+        match &self.role_context.inner {
+            InnerContext::Coordinator(c) => c.state.clone().into(),
+            InnerContext::Participant(c) => c.state.clone().into(),
+        }
+    }
+}
+
 impl<P, T> TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>
 where
     P: Process,
@@ -353,5 +380,140 @@ where
 
     pub fn set_state(&mut self, state: ParticipantState<T>) {
         self.role_context.state = state;
+    }
+}
+
+impl<P, T> TryFrom<TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>>
+    for TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>
+where
+    P: Process,
+    T: Time,
+{
+    type Error = InvalidStateError;
+
+    fn try_from(
+        context: TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            alarm: context.alarm,
+            coordinator: context.coordinator,
+            epoch: context.epoch,
+            last_commit_epoch: context.last_commit_epoch,
+            role_context: context.role_context.try_into()?,
+            this_process: context.this_process,
+        })
+    }
+}
+
+impl<P, T> TryFrom<TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>>
+    for TwoPhaseCommitContext<P, T, ParticipantContext<P, T>>
+where
+    P: Process,
+    T: Time,
+{
+    type Error = InvalidStateError;
+
+    fn try_from(
+        context: TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>,
+    ) -> Result<Self, Self::Error> {
+        Ok(Self {
+            alarm: context.alarm,
+            coordinator: context.coordinator,
+            epoch: context.epoch,
+            last_commit_epoch: context.last_commit_epoch,
+            role_context: context.role_context.try_into()?,
+            this_process: context.this_process,
+        })
+    }
+}
+
+impl<P, T> From<TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>>
+    for TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>
+where
+    P: Process,
+    T: Time,
+{
+    fn from(context: TwoPhaseCommitContext<P, T, CoordinatorContext<P, T>>) -> Self {
+        Self {
+            alarm: context.alarm,
+            coordinator: context.coordinator,
+            epoch: context.epoch,
+            last_commit_epoch: context.last_commit_epoch,
+            role_context: context.role_context.into(),
+            this_process: context.this_process,
+        }
+    }
+}
+
+impl<P, T> From<TwoPhaseCommitContext<P, T, ParticipantContext<P, T>>>
+    for TwoPhaseCommitContext<P, T, TwoPhaseCommitRoleContext<P, T>>
+where
+    P: Process,
+    T: Time,
+{
+    fn from(context: TwoPhaseCommitContext<P, T, ParticipantContext<P, T>>) -> Self {
+        Self {
+            alarm: context.alarm,
+            coordinator: context.coordinator,
+            epoch: context.epoch,
+            last_commit_epoch: context.last_commit_epoch,
+            role_context: context.role_context.into(),
+            this_process: context.this_process,
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::time::SystemTime;
+
+    use super::*;
+
+    impl Process for String {}
+
+    #[test]
+    fn build_coordinator_context() {
+        let now = SystemTime::now();
+
+        let unified_context = TwoPhaseCommitContextBuilder::<String, SystemTime>::new()
+            .with_alarm(now)
+            .with_coordinator("me".into())
+            .with_epoch(2)
+            .with_last_commit_epoch(1)
+            .with_state(TwoPhaseCommitState::WaitingForStart)
+            .with_this_process("me".into())
+            .with_participants(vec![
+                Participant::new("me".into()),
+                Participant::new("p1".into()),
+                Participant::new("p2".into()),
+            ])
+            .build()
+            .unwrap();
+
+        let coordinator_context: TwoPhaseCommitContext<_, _, CoordinatorContext<_, _>> =
+            unified_context.try_into().unwrap();
+
+        assert_eq!(coordinator_context.alarm().unwrap(), now);
+        assert_eq!(*coordinator_context.coordinator(), "me".to_string());
+        assert_eq!(*coordinator_context.epoch(), 2);
+        assert_eq!(coordinator_context.last_commit_epoch().unwrap(), 1);
+        assert_eq!(
+            *coordinator_context.state(),
+            CoordinatorState::WaitingForStart
+        );
+        assert_eq!(coordinator_context.participants().len(), 3);
+
+        let reunified_context: TwoPhaseCommitContext<_, _, TwoPhaseCommitRoleContext<_, _>> =
+            coordinator_context.into();
+
+        assert_eq!(reunified_context.alarm().unwrap(), now);
+        assert_eq!(*reunified_context.coordinator(), "me".to_string());
+        assert_eq!(*reunified_context.epoch(), 2);
+        assert_eq!(reunified_context.last_commit_epoch().unwrap(), 1);
+        assert_eq!(
+            reunified_context.state(),
+            TwoPhaseCommitState::WaitingForStart
+        );
+        assert_eq!(reunified_context.participants().unwrap().len(), 3);
     }
 }
